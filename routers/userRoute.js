@@ -4,5 +4,5 @@ import { login, signUp } from "../controllers/userController.js";
 
 export const userRoute = Router();
 
-userRoute.post('/signUp',signUp);
-userRoute.post('/login',login);
+userRoute.post('/users/signUp',signUp);
+userRoute.post('/users/login',login);

@@ -17,8 +17,7 @@ export const userModel = new Schema({
     },
     role:{
         type: String,
-        enum: ["user", "admin"],
-        default: "user",
+        enum: ["hrAdmin", "supervisor","staff","admin"],
         required: true,
     },
     // phoneNumber: {
