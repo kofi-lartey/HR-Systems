@@ -100,3 +100,39 @@ export const logoutUser = async (req, res) => {
     return res.status(500).json({ message: 'Logout failed', error: error.message });
   }
 };
+
+export const userProfile = async(req,res)=>{
+    try {
+        const {userID} = req.body
+        const findUser = await User.findById(userID)
+        if(!findUser){
+            return res.status(400).json({message:'User does not exist'})
+        }
+        return res.status(200).json({message:'User',findUser})
+
+    } catch (error) {
+        return res.status(500).json({message:error.message})
+    }
+}
+
+export const updateUserProfile = async(req,res)=>{
+    try {
+        const userid = req.user.id
+        if(!userid){
+            return res.status(400).json({message:'User not found'})
+        }
+        const {userID} = req.body
+        const updateUser = await User.findByIdAndUpdate(
+            userid,
+            req.body,
+            {new : true}
+        )
+        if(!updateUser){
+            return res.status(400).json({message:'User does not exist'})
+        }
+        return res.status(200).json({message:'User',updateUser})
+
+    } catch (error) {
+        return res.status(500).json({message:error.message})
+    }
+}
