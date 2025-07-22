@@ -101,6 +101,7 @@ export const logoutUser = async (req, res) => {
   }
 };
 
+
 export const userProfile = async(req,res)=>{
     try {
         const {userID} = req.body

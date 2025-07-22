@@ -9,6 +9,7 @@ export const attendanceSchema = Joi.object({
         .valid('present', 'absent or leave')
         .default('present'),
 
+    date: Joi.date(),
     status: Joi.string()
         .valid('early', 'late', 'ontime'),
     ipAddress: Joi.string()

@@ -15,7 +15,6 @@ export const attendanceModel = new Schema({
     },
     clockIn: {
         type: String,
-        required: true
     },
     clockOut: {
         type: String,
