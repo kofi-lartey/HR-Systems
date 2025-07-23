@@ -43,67 +43,94 @@ import { Department } from "../models/managementModel.js"
 // }
 
 export const department = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { error, value } = departmentSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({ message: error.details[0].message });
-    }
+    try {
+        const userId = req.user.id;
+        const { error, value } = departmentSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ message: error.details[0].message });
+        }
 
-    const { employees, headOfDepartment, name } = value;
+        const { employees, headOfDepartment, name } = value;
 
-    const findUser = await User.findById(userId);
-    if (!findUser) {
-      return res.status(400).json({ message: "User not found" });
-    }
+        const findUser = await User.findById(userId);
+        if (!findUser) {
+            return res.status(400).json({ message: "User not found" });
+        }
 
-    const findHOD = await User.findById(headOfDepartment);
-    if (!findHOD) {
-      return res.status(400).json({ message: "Head of Department not found" });
-    }
+        const findHOD = await User.findById(headOfDepartment);
+        if (!findHOD) {
+            return res.status(400).json({ message: "Head of Department not found" });
+        }
 
-    const hodDepartment = findHOD.department;
-    if (!hodDepartment || hodDepartment !== name) {
-      return res.status(400).json({
-        message: "Head of Department must belong to the department being created"
-      });
-    }
+        const hodDepartment = findHOD.department;
+        if (!hodDepartment || hodDepartment !== name) {
+            return res.status(400).json({
+                message: "Head of Department must belong to the department being created"
+            });
+        }
 
-    const findDepartment = await Department.findOne({name})
-    if(findDepartment){
-        return res.status(400).json({message:"Department Already exist"})
-    }
+        const findDepartment = await Department.findOne({ name })
+        if (findDepartment) {
+            return res.status(400).json({ message: "Department Already exist" })
+        }
 
-    for (const empId of employees) {
-      const findEmp = await Employee.findById(empId).populate("headOfDepartment");
-      if (!findEmp) {
-        return res.status(400).json({ message: `Employee not found: ${empId}` });
-      }
+        for (const empId of employees) {
+            const findEmp = await Employee.findById(empId).populate("headOfDepartment");
+            if (!findEmp) {
+                return res.status(400).json({ message: `Employee not found: ${empId}` });
+            }
 
-      const empHODDept = findEmp.headOfDepartment?.department;
-      if (!empHODDept || empHODDept !== name) {
-        return res.status(400).json({
-          message: `Employee ${empId} is not under a head of department that matches the department name`
+            const empHODDept = findEmp.headOfDepartment?.department;
+            if (!empHODDept || empHODDept !== name) {
+                return res.status(400).json({
+                    message: `Employee ${empId} is not under a head of department that matches the department name`
+                });
+            }
+        }
+
+        const departmentDetails = await Department.create({
+            ...value,
+            createdBy: findUser._id
         });
-      }
+
+        const populatedDepartment = await Department.findById(departmentDetails._id)
+            .populate({ path: "createdBy", select: "-password" })
+            .populate({ path: "headOfDepartment", select: "-password" })
+            .populate({ path: "employees", select: "firstName lastName email position" });
+
+        return res.status(201).json({
+            success: true,
+            message: "Department created successfully",
+            department: populatedDepartment
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
     }
-
-    const departmentDetails = await Department.create({
-      ...value,
-      createdBy: findUser._id
-    });
-
-    const populatedDepartment = await Department.findById(departmentDetails._id)
-      .populate({ path: "createdBy", select: "-password" })
-      .populate({ path: "headOfDepartment", select: "-password" })
-      .populate({ path: "employees", select: "firstName lastName email position" });
-
-    return res.status(201).json({
-      success: true,
-      message: "Department created successfully",
-      department: populatedDepartment
-    });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
 };
+
+export const singleDepartment = async (req, res) => {
+    try {
+        const departmentID = req.params.id
+        // check if the department exist
+        const findDepartment = await Department.findById(departmentID)
+        if (!findDepartment) {
+            return res.status(400).json({ message: 'Department not available' })
+        }
+        return res.status(200).json({message:'This is the Department you requested',findDepartment})
+    } catch (error) {
+        return res.status(500).json({ message: error.message })
+    }
+}
+
+export const allDepartment = async (req, res) => {
+    try {
+        const allDepartment = await Department.find()
+        // print out no department if there is non
+        if(allDepartment.lenght === 0){
+            return res.status(400).json({message:'No Department available'})
+        }
+        return res.status(200).json({message:'These are the available Department',allDepartment})
+    } catch (error) {
+        return res.status(500).json({ message: error.message })
+    }
+}
