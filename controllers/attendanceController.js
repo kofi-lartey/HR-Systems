@@ -1,7 +1,7 @@
 import { Attendance } from "../models/attendanceModel.js";
 import { Employee } from "../models/employeeModel.js";
 import { User } from "../models/userModel.js";
-import { attendanceSchema, userAttendanceSchema } from "../schemas/attendanceSchema.js";
+import { attendanceSchema} from "../schemas/attendanceSchema.js";
 
 // export const attendance = async (req, res) => {
 //     try {

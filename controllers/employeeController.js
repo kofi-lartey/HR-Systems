@@ -11,6 +11,18 @@ export const employee = async(req,res) =>{
         if(error){
             return res.status(400).json({message:error.details[0].message});
         }
+        
+        const {headOfDepartment, email, id, department} = value
+        // verify if the head of department exist
+        const findHeadofDepartment = await User.findById(headOfDepartment);
+        if(!findHeadofDepartment){
+            return res.status(400).json({message:'Head of Department not found'})
+        }
+        // check if the head of Department is truely the head of department
+        if(findHeadofDepartment.role !== "headOfDepartment"){
+            return res.status(400).json({message:'User is not Head of Department'})
+        }
+
         if(!userId){
             return res.status(400).json({message:'User Id is required'})
         }
@@ -19,21 +31,34 @@ export const employee = async(req,res) =>{
         if(!user){
             return res.status(400).json({message:'User not found'});
         }
-        // check if the user has an employee details
-        const findEmployee = await Employee.findOne({email:user.email})
+        // if they are both in the same department(the hod and the one from the body)
+        if(findHeadofDepartment.department?.toLowerCase() !== department?.toLowerCase()){
+            return res.status(400).json({message:"Head of Department must be in the same Department as the Employee"})
+        }
+        // check if there is any employee with same email
+        const findEmployee = await Employee.findOne({email})
         if(findEmployee){
             return res.status(400).json({message:'Employee with this Email Already Exist'})
+        }
+        // check if there is any employee with same id
+        const findEmployeeID = await Employee.findOne({id})
+        if(findEmployeeID){
+            return res.status(400).json({message:`Employee with this ID: ${id} Already Exist`})
         }
         // create employee details
         const employeeData = await Employee.create({
             ...value,
-            email:user.email,
-            user:userId
+            user:userId,
+            headOfDepartment:findHeadofDepartment.id
         });
         // populate the employee details with the user
         const populateEmployee = await Employee.findById(employeeData._id)
         .populate({
             path:"user",
+            select:'-password'
+        })
+        .populate({
+            path:"headOfDepartment",
             select:'-password'
         })
         console.log('Employee Created', populateEmployee);

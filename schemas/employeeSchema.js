@@ -6,7 +6,8 @@ export const employeeSchema = Joi.object({
     lastName: Joi.string().required(),
     email: Joi.string(),
     jobTitle: Joi.string(),
-    department: Joi.string(),
+    department: Joi.string().required(),
+    headOfDepartment: Joi.string().required(),
     hireDate: Joi.string(),
     salary: Joi.number()
 })

@@ -23,6 +23,11 @@ export const employeeModel = new Schema({
     department:{
         type: String,
     },
+    headOfDepartment: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: [true, 'Head of department is required'],
+    },
     hireDate:{
         type: String,
     },
