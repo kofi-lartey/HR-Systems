@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose';
 import normalize from 'normalize-mongoose'
 
-const departmentModel = new Schema({
+export const departmentModel = new Schema({
     name: {
         type: String,
         required: [true, 'Department name is required'],
@@ -20,7 +20,7 @@ const departmentModel = new Schema({
     employees: [
         {
             type: Schema.Types.ObjectId,
-            ref: 'User',
+            ref: 'Employee',
         },
     ],
     createdBy: {
@@ -35,4 +35,4 @@ const departmentModel = new Schema({
 },{ timestamps: true,});
 
 departmentModel.plugin(normalize)
-export default Department = model('Department', departmentModel);
+export const Department = model('Department', departmentModel);
