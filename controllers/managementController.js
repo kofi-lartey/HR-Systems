@@ -123,14 +123,75 @@ export const singleDepartment = async (req, res) => {
 }
 
 export const allDepartment = async (req, res) => {
-    try {
-        const allDepartment = await Department.find()
-        // print out no department if there is non
-        if(allDepartment.lenght === 0){
-            return res.status(400).json({message:'No Department available'})
-        }
-        return res.status(200).json({message:'These are the available Department',allDepartment})
-    } catch (error) {
-        return res.status(500).json({ message: error.message })
+  try {
+    const departments = await Department.find()
+      .populate({ path: "createdBy", select: "-password" })
+      .populate({ path: "headOfDepartment", select: "-password" })
+      .populate({ path: "employees", select: "firstName lastName email position" });
+
+    if (departments.length === 0) {
+      return res.status(404).json({ message: "No departments available" });
     }
-}
+
+    return res.status(200).json({
+      success: true,
+      message: "These are the available departments",
+      departments,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const updateDepartment = async (req, res) => {
+  try {
+    const departmentID = req.params.id;
+
+    // Check if department exists
+    const existingDepartment = await Department.findById(departmentID);
+    if (!existingDepartment) {
+      return res.status(404).json({ message: "Department not found" });
+    }
+
+    // Perform update
+    const updatedDepartment = await Department.findByIdAndUpdate(
+      departmentID,
+      req.body,
+      { new: true }
+    )
+      .populate({ path: "createdBy", select: "-password" })
+      .populate({ path: "headOfDepartment", select: "-password" })
+      .populate({ path: "employees", select: "firstName lastName email position" });
+
+    return res.status(200).json({
+      success: true,
+      message: "Department updated successfully",
+      department: updatedDepartment
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const deletDepartment = async (req, res) => {
+  try {
+    const departmentID = req.params.id;
+
+    // Check if department exists
+    const existingDepartment = await Department.findById(departmentID);
+    if (!existingDepartment) {
+      return res.status(404).json({ message: "Department not found" });
+    }
+
+    // Perform delete
+    const deletedDepartment = await Department.findByIdAndDelete(departmentID)
+    return res.status(200).json({
+      success: true,
+      message: "Department Deleted successfully",
+      department: deletedDepartment
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
