@@ -1,89 +1,90 @@
 import { Employee } from "../models/employeeModel.js";
 import { User } from "../models/userModel.js";
-import { employeeSchema } from "../schemas/employeeSchema.js";
+import { employeeRoleSchema, employeeSchema } from "../schemas/employeeSchema.js";
 
 
-export const employee = async(req,res) =>{
+export const employee = async (req, res) => {
     try {
         // user Id taken from the token
         const userId = req.user.id;
-        const{error,value} = employeeSchema.validate(req.body);
-        if(error){
-            return res.status(400).json({message:error.details[0].message});
-        }
-        
-        const {headOfDepartment, email, id, department} = value
-        // verify if the head of department exist
-        const findHeadofDepartment = await User.findById(headOfDepartment);
-        if(!findHeadofDepartment){
-            return res.status(400).json({message:'Head of Department not found'})
-        }
-        // check if the head of Department is truely the head of department
-        if(findHeadofDepartment.role !== "headOfDepartment"){
-            return res.status(400).json({message:'User is not Head of Department'})
+        const { error, value } = employeeSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ message: error.details[0].message });
         }
 
-        if(!userId){
-            return res.status(400).json({message:'User Id is required'})
+        const { headOfDepartment, email, id, department } = value
+        // verify if the head of department exist
+        const findHeadofDepartment = await User.findById(headOfDepartment);
+        if (!findHeadofDepartment) {
+            return res.status(400).json({ message: 'Head of Department not found' })
+        }
+        // check if the head of Department is truely the head of department
+        if (findHeadofDepartment.role !== "headOfDepartment") {
+            return res.status(400).json({ message: 'User is not Head of Department' })
+        }
+
+        if (!userId) {
+            return res.status(400).json({ message: 'User Id is required' })
         }
         // find the user with  that id
         const user = await User.findById(userId);
-        if(!user){
-            return res.status(400).json({message:'User not found'});
+        if (!user) {
+            return res.status(400).json({ message: 'User not found' });
         }
         // if they are both in the same department(the hod and the one from the body)
-        if(findHeadofDepartment.department?.toLowerCase() !== department?.toLowerCase()){
-            return res.status(400).json({message:"Head of Department must be in the same Department as the Employee"})
+        if (findHeadofDepartment.department?.toLowerCase() !== department?.toLowerCase()) {
+            return res.status(400).json({ message: "Head of Department must be in the same Department as the Employee" })
         }
         // check if there is any employee with same email
-        const findEmployee = await Employee.findOne({email})
-        if(findEmployee){
-            return res.status(400).json({message:'Employee with this Email Already Exist'})
+        const findEmployee = await Employee.findOne({ email })
+        if (findEmployee) {
+            return res.status(400).json({ message: 'Employee with this Email Already Exist' })
         }
         // check if there is any employee with same id
-        const findEmployeeID = await Employee.findOne({id})
-        if(findEmployeeID){
-            return res.status(400).json({message:`Employee with this ID: ${id} Already Exist`})
+        const findEmployeeID = await Employee.findOne({ id })
+        if (findEmployeeID) {
+            return res.status(400).json({ message: `Employee with this ID: ${id} Already Exist` })
         }
         // create employee details
         const employeeData = await Employee.create({
             ...value,
-            user:userId,
-            headOfDepartment:findHeadofDepartment.id
+            user: userId,
+            headOfDepartment: findHeadofDepartment.id,
+            role: user.role
         });
         // populate the employee details with the user
         const populateEmployee = await Employee.findById(employeeData._id)
-        .populate({
-            path:"user",
-            select:'-password'
-        })
-        .populate({
-            path:"headOfDepartment",
-            select:'-password'
-        })
+            .populate({
+                path: "user",
+                select: '-password'
+            })
+            .populate({
+                path: "headOfDepartment",
+                select: '-password'
+            })
         console.log('Employee Created', populateEmployee);
 
-        return res.status(200).json({message:'Employee Details created Succefully🎉',populateEmployee})
-        
+        return res.status(200).json({ message: 'Employee Details created Succefully🎉', populateEmployee })
+
     } catch (error) {
-        return res.status(500).json({message:error.message})
+        return res.status(500).json({ message: error.message })
     }
 }
 
-export const allEmployee = async(req,res) =>{
+export const allEmployee = async (req, res) => {
     try {
-        const allEmployee = await Employee.find().populate("user","-password")
-        console.log('All Employee',allEmployee)
-        if(allEmployee.length == 0){
-            return res.status(400).json({message:'No Employee'})
+        const allEmployee = await Employee.find().populate("user", "-password")
+        console.log('All Employee', allEmployee)
+        if (allEmployee.length == 0) {
+            return res.status(400).json({ message: 'No Employee' })
         }
-        return res.status(200).json({message:'These are all your Employees',allEmployee})
+        return res.status(200).json({ message: 'These are all your Employees', allEmployee })
     } catch (error) {
-        return res.status(500).json({message:error.message})
+        return res.status(500).json({ message: error.message })
     }
 }
 
-export const singleEmployee = async(req,res) =>{
+export const singleEmployee = async (req, res) => {
     try {
         // const userId = req.user.id;
         const employeeID = req.params.id
@@ -96,67 +97,118 @@ export const singleEmployee = async(req,res) =>{
         //     return res.status(400).json({message:'User not found'});
         // }
         // check if the user has an employee details
-        const findEmployee = await Employee.findById(employeeID).populate("user","-password")
-        if(!findEmployee){
-            return res.status(400).json({message:'Employee Does not Exist'})
+        const findEmployee = await Employee.findById(employeeID).populate("user", "-password")
+        if (!findEmployee) {
+            return res.status(400).json({ message: 'Employee Does not Exist' })
         }
-    
-        console.log('Employee',singleEmployee)
-        return res.status(200).json({message:'Your requested Employee',findEmployee})
+
+        console.log('Employee', singleEmployee)
+        return res.status(200).json({ message: 'Your requested Employee', findEmployee })
     } catch (error) {
-        return res.status(500).json({message:error.message})
+        return res.status(500).json({ message: error.message })
     }
 }
 
-export const updateEmployee = async(req,res) =>{
+export const updateEmployee = async (req, res) => {
     try {
         const userId = req.user.id;
         const employeeID = req.params.id
-        if(!userId){
-            return res.status(400).json({message:'Unauthorize'})
+        if (!userId) {
+            return res.status(400).json({ message: 'Unauthorize' })
         }
         // find the user with  that id
         const user = await User.findById(userId);
-        if(!user){
-            return res.status(400).json({message:'User not found'});
+        if (!user) {
+            return res.status(400).json({ message: 'User not found' });
         }
         // check if the user has an employee details
         const updatedEmployee = await Employee.findByIdAndUpdate(
             employeeID,
             req.body,
-            {new:true})
+            { new: true })
 
-        if(!updatedEmployee){
-            return res.status(400).json({message:'Employee Does not Exist'})
+        if (!updatedEmployee) {
+            return res.status(400).json({ message: 'Employee Does not Exist' })
         }
-        console.log('Employee',updatedEmployee)
-        return res.status(200).json({message:'Your requested Employee',updatedEmployee})
+        console.log('Employee', updatedEmployee)
+        return res.status(200).json({ message: 'Your requested Employee', updatedEmployee })
     } catch (error) {
-        return res.status(500).json({message:error.message})
+        return res.status(500).json({ message: error.message })
     }
 }
 
-export const deleteEmployee = async(req,res) =>{
+export const deleteEmployee = async (req, res) => {
     try {
         const userId = req.user.id;
         const employeeID = req.params.id
-        if(!userId){
-            return res.status(400).json({message:'Unauthorize'})
+        if (!userId) {
+            return res.status(400).json({ message: 'Unauthorize' })
         }
         // find the user with  that id
         const user = await User.findById(userId);
-        if(!user){
-            return res.status(400).json({message:'User not found'});
+        if (!user) {
+            return res.status(400).json({ message: 'User not found' });
         }
         // check if the user has an employee details
         const delEmployee = await Employee.findByIdAndDelete(employeeID)
 
-        if(!delEmployee){
-            return res.status(400).json({message:'Employee Does not Exist'})
+        if (!delEmployee) {
+            return res.status(400).json({ message: 'Employee Does not Exist' })
         }
-        console.log('Employee',delEmployee)
-        return res.status(200).json({message:'Employee Deleted Successfully🎉',delEmployee})
+        console.log('Employee', delEmployee)
+        return res.status(200).json({ message: 'Employee Deleted Successfully🎉', delEmployee })
     } catch (error) {
-        return res.status(500).json({message:error.message})
+        return res.status(500).json({ message: error.message })
     }
 }
+export const updateEmployeerole = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const employeeID = req.params.id;
+
+    const { error, value } = employeeRoleSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Check if the requesting user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if the employee exists
+    const findEmployee = await Employee.findById(employeeID).populate("user", "-password");
+    if (!findEmployee) {
+      return res.status(404).json({ message: 'Employee does not exist' });
+    }
+
+    // Update the role on the associated User model
+    const employeeUser = await User.findById(findEmployee.user._id);
+    if (!employeeUser) {
+      return res.status(404).json({ message: 'Associated user not found' });
+    }
+
+    employeeUser.role = value.role;
+    await employeeUser.save();
+
+    // Update additional info on the Employee model if any
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      employeeID,
+      value,
+      { new: true }
+    ).populate('headOfDepartment', 'firstName lastName email');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Employee role updated successfully',
+      employee: updatedEmployee
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};

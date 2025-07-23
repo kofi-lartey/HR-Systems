@@ -34,6 +34,11 @@ export const employeeModel = new Schema({
     salary:{
         type: Number,
     },
+    role:{
+        type: String,
+        enum: ["hrAdmin","headOfDepartment","staff"],
+        required: true,
+    },
     user: {
         type: Schema.Types.ObjectId,
         ref: 'User',

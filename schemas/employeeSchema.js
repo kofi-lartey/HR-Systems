@@ -8,6 +8,11 @@ export const employeeSchema = Joi.object({
     jobTitle: Joi.string(),
     department: Joi.string().required(),
     headOfDepartment: Joi.string().required(),
+    role: Joi.string().valid("hrAdmin","headOfDepartment","staff"),
     hireDate: Joi.string(),
     salary: Joi.number()
+})
+
+export const employeeRoleSchema = Joi.object({
+    role: Joi.string().valid("hrAdmin","headOfDepartment","staff").required()
 })

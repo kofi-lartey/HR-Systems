@@ -24,15 +24,12 @@ export const loginSchema = Joi.object({
     // confirmPassword: Joi.string().valid(Joi.ref('password')).required().strip(), //.strip() removes confirm Password from output after validation
 });
 
-export const passwordResetSchema = Joi.object({
+export const changePasswordSchema = Joi.object({
     newPassword: Joi.string().min(8).required().messages({
         'string.min': 'Password must be at least 8 characters',
         'any.required': 'New password is required',
     }),
-    confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
-        'any.only': 'Passwords do not match',
-        'any.required': 'Confirm password is required',
-    })
+    oldPassword: Joi.string().required()
 });
 
 export const forgetPasswordSchema = Joi.object({
